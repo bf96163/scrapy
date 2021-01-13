@@ -44,6 +44,9 @@ def load_object(path):
 
     If ``path`` is not a string, but is a callable object, such as a class or
     a function, then return it as is.
+    importlib.import_module (module,package) 返回的是相应的模块，package仅在相对导入时候引入
+    如果path参数不是str ，检查是否是函数 是返回 不是则报类型错
+    str.rindex 是从右边数的index
     """
 
     if not isinstance(path, str):
