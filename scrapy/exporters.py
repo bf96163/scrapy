@@ -33,19 +33,20 @@ class BaseItemExporter:
         """Configure the exporter by poping options from the ``options`` dict.
         If dont_fail is set, it won't raise an exception on unexpected options
         (useful for using with keyword arguments in subclasses ``__init__`` methods)
+        用来在继承类里搞设置的~
         """
-        self.encoding = options.pop('encoding', None)
-        self.fields_to_export = options.pop('fields_to_export', None)
-        self.export_empty_fields = options.pop('export_empty_fields', False)
+        self.encoding = options.pop('encoding', None)#pop第一个参数是key 第二个参数是默认值 编码格式
+        self.fields_to_export = options.pop('fields_to_export', None)# 输出字段 默认为都输出
+        self.export_empty_fields = options.pop('export_empty_fields', False)# 输出item所有字段 默认否
         self.indent = options.pop('indent', None)
-        if not dont_fail and options:
+        if not dont_fail and options: #解析完成还有没用到的选项
             raise TypeError(f"Unexpected options: {', '.join(options.keys())}")
 
     def export_item(self, item):
         raise NotImplementedError
 
     def serialize_field(self, field, name, value):
-        serializer = field.get('serializer', lambda x: x)
+        serializer = field.get('serializer', lambda x: x)#默认就是个 x=y的函数
         return serializer(value)
 
     def start_exporting(self):
@@ -57,6 +58,7 @@ class BaseItemExporter:
     def _get_serialized_fields(self, item, default_value=None, include_empty=None):
         """Return the fields to export as an iterable of tuples
         (name, serialized_value)
+        用serialize_field 序列化当前所选的item项
         """
         item = ItemAdapter(item)
 
@@ -64,15 +66,15 @@ class BaseItemExporter:
             include_empty = self.export_empty_fields
 
         if self.fields_to_export is None:
-            if include_empty:
+            if include_empty:# 包含空值（item定义有但是传入没有的key）
                 field_iter = item.field_names()
-            else:
+            else:            # 只包含item传递过来的值
                 field_iter = item.keys()
         else:
-            if include_empty:
+            if include_empty:# 指定特定值
                 field_iter = self.fields_to_export
             else:
-                field_iter = (x for x in self.fields_to_export if x in item)
+                field_iter = (x for x in self.fields_to_export if x in item) #取交集
 
         for field_name in field_iter:
             if field_name in item:
@@ -90,11 +92,13 @@ class JsonLinesItemExporter(BaseItemExporter):
         super().__init__(dont_fail=True, **kwargs)
         self.file = file
         self._kwargs.setdefault('ensure_ascii', not self.encoding)
-        self.encoder = ScrapyJSONEncoder(**self._kwargs)
+        self.encoder = ScrapyJSONEncoder(**self._kwargs) #就是处理各种数据类型的 比如时间 集合这种json自己处理不了的
 
     def export_item(self, item):
+        #简单解释 将选出的项用serializer序列化后变成dict
         itemdict = dict(self._get_serialized_fields(item))
         data = self.encoder.encode(itemdict) + '\n'
+        #写到文件里
         self.file.write(to_bytes(data, self.encoding))
 
 
@@ -103,6 +107,7 @@ class JsonItemExporter(BaseItemExporter):
     def __init__(self, file, **kwargs):
         super().__init__(dont_fail=True, **kwargs)
         self.file = file
+        # indent 就是用来控制缩进的
         # there is a small difference between the behaviour or JsonItemExporter.indent
         # and ScrapyJSONEncoder.indent. ScrapyJSONEncoder.indent=None is needed to prevent
         # the addition of newlines everywhere

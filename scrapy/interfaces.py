@@ -1,6 +1,6 @@
 from zope.interface import Interface
 
-
+#接口只定义规范，没有具体实现，抽象类可以包含实现
 class ISpiderLoader(Interface):
 
     def from_settings(settings):

@@ -22,8 +22,8 @@ class _BaseItem(object_ref):
     pass
 
 
-class _BaseItemMeta(ABCMeta):
-    def __instancecheck__(cls, instance):
+class _BaseItemMeta(ABCMeta): #抽象类，如果用修饰器@abc.abstractmethod  修饰某个方法，则继承这个_BaseitemMeta 的类需要实现那个方法。
+    def __instancecheck__(cls, instance): #在调用 isinstance时候回调用这个方法 魔法函数 跟__string__类似
         if cls is BaseItem:
             warn('scrapy.item.BaseItem is deprecated, please use scrapy.item.Item instead',
                  ScrapyDeprecationWarning, stacklevel=2)
@@ -51,56 +51,62 @@ class ItemMeta(_BaseItemMeta):
 
     .. _metaclass: https://realpython.com/python-metaclasses
     """
-
-    def __new__(mcs, class_name, bases, attrs):
-        classcell = attrs.pop('__classcell__', None)
+    # 整体的作用就是 将自身的类 改个名字放到_class里 将所有的Field类型属性放到 fields属性里，估计是方便调用 （需要相应的类使用这个元类，起到一个整理的作用）
+    def __new__(mcs, class_name, bases, attrs): #牢记__new__是一个类方法 @classmethod super 以后才会调用init 不然会跳过init方法
+        classcell = attrs.pop('__classcell__', None) #自定义metaclass时候 需要把这个属性传递给父meta的__new__方法  https://stackoverflow.com/questions/41343263/provide-classcell-example-for-python-3-6-metaclass
+        # 简单的理解就是 将有_class这个属性时候，生成一个“x_名字” 的的跟自己差不多的类 后面叫"分身"
         new_bases = tuple(base._class for base in bases if hasattr(base, '_class'))
-        _class = super().__new__(mcs, 'x_' + class_name, new_bases, attrs)
+        _class = super().__new__(mcs, 'x_' + class_name, new_bases, attrs)# super是调用父类的生成类的方法，不会造成循环调用
 
-        fields = getattr(_class, 'fields', {})
+        fields = getattr(_class, 'fields', {}) #从分身这个类里面拿到fields属性
         new_attrs = {}
-        for n in dir(_class):
+        for n in dir(_class):#dir() 范围内的变量、方法和定义的类型列表；(包括继承过来的)
             v = getattr(_class, n)
             if isinstance(v, Field):
                 fields[n] = v
             elif n in attrs:
                 new_attrs[n] = attrs[n]
-
+        # 主要是将field的值跟 其他的值区分开
         new_attrs['fields'] = fields
         new_attrs['_class'] = _class
+        #下面这部分是python3.6以后自己写的metaclass.__new__需要传递__classcell__这个值
         if classcell is not None:
             new_attrs['__classcell__'] = classcell
         return super().__new__(mcs, class_name, bases, new_attrs)
 
-
+# Mutablemapping 继承自Mapping, 添加了抽象方法__setitem__()和__delitem__()。还添加了pop()、popitem()、clear()、update()和setdefault()的实现。
 class DictItem(MutableMapping, BaseItem):
 
     fields = {}
-
+    # 增加个warning而已没用
     def __new__(cls, *args, **kwargs):
         if issubclass(cls, DictItem) and not issubclass(cls, Item):
             warn('scrapy.item.DictItem is deprecated, please use scrapy.item.Item instead',
                  ScrapyDeprecationWarning, stacklevel=2)
         return super().__new__(cls, *args, **kwargs)
-
+    # 将参数列表展开到内部
     def __init__(self, *args, **kwargs):
         self._values = {}
         if args or kwargs:  # avoid creating dict for most common case
-            for k, v in dict(*args, **kwargs).items():
+            for k, v in dict(*args, **kwargs).items(): #只要args里的参数 和 kwargs里的字典都会展开到内部的属性和值
                 self[k] = v
 
+    #Mutablemapping 类型需要复写的
     def __getitem__(self, key):
         return self._values[key]
 
+    # Mutablemapping 类型需要复写的
     def __setitem__(self, key, value):
         if key in self.fields:
             self._values[key] = value
         else:
             raise KeyError(f"{self.__class__.__name__} does not support field: {key}")
 
+    # Mutablemapping 类型需要复写的
     def __delitem__(self, key):
         del self._values[key]
 
+    # Mutablemapping 类型需要复写的
     def __getattr__(self, name):
         if name in self.fields:
             raise AttributeError(f"Use item[{name!r}] to get field value")

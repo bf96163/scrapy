@@ -5,7 +5,7 @@ from twisted.python.failure import Failure
 
 from scrapy.utils.request import referer_str
 
-SCRAPEDMSG = "Scraped from %(src)s" + os.linesep + "%(item)s"
+SCRAPEDMSG = "Scraped from %(src)s" + os.linesep + "%(item)s" #os.linesep 就是当前平台的换行（终止符）
 DROPPEDMSG = "Dropped: %(exception)s" + os.linesep + "%(item)s"
 CRAWLEDMSG = "Crawled (%(status)s) %(request)s%(request_flags)s (referer: %(referer)s)%(response_flags)s"
 ITEMERRORMSG = "Error processing %(item)s"

@@ -22,11 +22,11 @@ live_refs = defaultdict(weakref.WeakKeyDictionary)
 class object_ref:
     """Inherit from this class to a keep a record of live instances"""
 
-    __slots__ = ()
+    __slots__ = ()#slots 限制这个类的子类只能实现在这里定义的方法
 
     def __new__(cls, *args, **kwargs):
         obj = object.__new__(cls)
-        live_refs[cls][obj] = time()
+        live_refs[cls][obj] = time() #统计作用而已
         return obj
 
 
