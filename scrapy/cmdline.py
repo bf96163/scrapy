@@ -130,7 +130,7 @@ def execute(argv=None, settings=None):
 
     if settings is None:
         # 没指定setting的话，就调用默认方法
-        settings = get_project_settings()
+        settings = get_project_settings()# 从scrapy.cfg载入setting 再从环境中载入scrapy相关的setting到setting对象里
         # set EDITOR from environment if available 用于编辑文件
         try:
             editor = os.environ['EDITOR']
@@ -139,7 +139,7 @@ def execute(argv=None, settings=None):
         else:
             settings['EDITOR'] = editor
 
-    inproject = inside_project()#判断是否在项目内
+    inproject = inside_project()#判断是否在项目内(用是否能找到scrapy.cfg来判断)
     cmds = _get_commands_dict(settings, inproject) #拿到当前状态下所有可用模块
     cmdname = _pop_command_name(argv) #从命令行里拿到指向模块那个
     parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(),
@@ -156,6 +156,7 @@ def execute(argv=None, settings=None):
     ## 解析命令
     parser.usage = f"scrapy {cmdname} {cmd.syntax()}"
     parser.description = cmd.long_desc()
+    #将命令中的设置弄到setting中
     settings.setdict(cmd.default_settings, priority='command')
     cmd.settings = settings
     cmd.add_options(parser)
@@ -163,11 +164,11 @@ def execute(argv=None, settings=None):
     ## 解析命令结束
 
     #运行命令
-    _run_print_help(parser, cmd.process_options, args, opts)
+    _run_print_help(parser, cmd.process_options, args, opts) #主要是写一些setting
     # 生成CrawlerProcess
     cmd.crawler_process = CrawlerProcess(settings)
-    # 将命令的crawler_process 再次运行（）？？？
-    _run_print_help(parser, _run_command, cmd, args, opts)
+    # 运行crawler_process 对应的命令
+    _run_print_help(parser, _run_command, cmd, args, opts) #调用command的run启动这两个参数
     sys.exit(cmd.exitcode)
 
 
@@ -177,13 +178,13 @@ def _run_command(cmd, args, opts):
     else:
         cmd.run(args, opts)
 
-# 目前还不太理解 ！！！！
+# 用cpython的porfiler 运行 cmd.run(args, opts) 并传入变量
 def _run_command_profiled(cmd, args, opts):
     if opts.profile:
         sys.stderr.write(f"scrapy: writing cProfile stats to {opts.profile!r}\n")
-    loc = locals()
+    loc = locals() #拿到所有变量
     p = cProfile.Profile()
-    p.runctx('cmd.run(args, opts)', globals(), loc)
+    p.runctx('cmd.run(args, opts)', globals(), loc) #调用函数 并传入 global 和 locals 中的变量
     if opts.profile:
         p.dump_stats(opts.profile)
 

@@ -282,12 +282,12 @@ class BaseSettings(MutableMapping):
             :attr:`~scrapy.settings.SETTINGS_PRIORITIES` or an integer
         :type priority: str or int
         """
-        self._assert_mutability()
+        self._assert_mutability() #如果self.frozen设置了，将抛出typeerror
         if isinstance(module, str):
             module = import_module(module)
         for key in dir(module):
             if key.isupper():
-                self.set(key, getattr(module, key), priority)
+                self.set(key, getattr(module, key), priority) #将setting对象的.attributes 对象的设置为对应的key和value
 
     def update(self, values, priority='project'):
         """

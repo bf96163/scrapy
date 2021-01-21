@@ -74,35 +74,37 @@ def closest_scrapy_cfg(path='.', prevpath=None):
     path = os.path.abspath(path)
     cfgfile = os.path.join(path, 'scrapy.cfg')
     if os.path.exists(cfgfile):
-        return cfgfile
-    return closest_scrapy_cfg(os.path.dirname(path), path)
+        return cfgfile#返回path 下的scrapy.cfg
+    return closest_scrapy_cfg(os.path.dirname(path), path)#返回path子目录下的 scrapy.cfg
 
 
 def init_env(project='default', set_syspath=True):
     """Initialize environment to use command-line tool from inside a project
     dir. This sets the Scrapy settings module and modifies the Python path to
     be able to locate the project module.
+    向环境变量添加cfg文件中的'settings'变量，然后将其设置为 $SCRAPY_SETTINGS_MODULE
+    默认设置系统path路径 让其包含scarpy.cfg对应的路径
     """
     cfg = get_config()
-    if cfg.has_option('settings', project):
+    if cfg.has_option('settings', project): #如果配置scrapy.cfg文件中有'settings'这项，就把它设置到环境里
         os.environ['SCRAPY_SETTINGS_MODULE'] = cfg.get('settings', project)
-    closest = closest_scrapy_cfg()
+    closest = closest_scrapy_cfg() # 拿到当前目录的scrapy.cfg
     if closest:
-        projdir = os.path.dirname(closest)
+        projdir = os.path.dirname(closest) #如果当前目录有scrapy.cfg
         if set_syspath and projdir not in sys.path:
-            sys.path.append(projdir)
+            sys.path.append(projdir)# 如果设置了set_syspath 那么将sys.path添加一个当前的目录
 
 
 def get_config(use_closest=True):
     """Get Scrapy config file as a ConfigParser"""
-    sources = get_sources(use_closest)
+    sources = get_sources(use_closest)# 返回可能包含scrapy.cfg的文件路径列表，如果use_closest=true 也返回当前目录下的.scrapy.cfg
     cfg = ConfigParser()
     cfg.read(sources)
-    return cfg
+    return cfg# 拿到配置变量
 
 
-def get_sources(use_closest=True):
-    xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')
+def get_sources(use_closest=True): #返回一个可能拥有scrapy.cfg的列表
+    xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or os.path.expanduser('~/.config')#os.path.expanduser 是把~展开的用途
     sources = [
         '/etc/scrapy.cfg',
         r'c:\scrapy\scrapy.cfg',

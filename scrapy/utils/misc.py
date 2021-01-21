@@ -47,6 +47,8 @@ def load_object(path):
     importlib.import_module (module,package) 返回的是相应的模块，package仅在相对导入时候引入
     如果path参数不是str ，检查是否是函数 是返回 不是则报类型错
     str.rindex 是从右边数的index
+
+    本函数是返回要么是这个对象，要么从str载入的对象
     """
 
     if not isinstance(path, str):
@@ -161,19 +163,21 @@ def create_instance(objcls, settings, crawler, *args, **kwargs):
     .. versionchanged:: 2.2
        Raises ``TypeError`` if the resulting instance is ``None`` (e.g. if an
        extension has not been implemented correctly).
+       他这里就是一个实例化 优先使用from_crawler 其次是from_settings
+       最后直接调用 objcls(*args, **kwargs)来实例化一个对象
     """
-    if settings is None:
+    if settings is None: #从crawler的setting中拿到setting对象
         if crawler is None:
             raise ValueError("Specify at least one of settings and crawler.")
         settings = crawler.settings
-    if crawler and hasattr(objcls, 'from_crawler'):
+    if crawler and hasattr(objcls, 'from_crawler'): #如果实例化 目标类 中有from_crawler方法 就用这个方法实例化
         instance = objcls.from_crawler(crawler, *args, **kwargs)
         method_name = 'from_crawler'
-    elif hasattr(objcls, 'from_settings'):
+    elif hasattr(objcls, 'from_settings'): #如果 目标类 中有from_settings方法 就用这个方法实例化目标
         instance = objcls.from_settings(settings, *args, **kwargs)
         method_name = 'from_settings'
     else:
-        instance = objcls(*args, **kwargs)
+        instance = objcls(*args, **kwargs) # 前面都没有 普通方法实例化
         method_name = '__new__'
     if instance is None:
         raise TypeError(f"{objcls.__qualname__}.{method_name} returned None")

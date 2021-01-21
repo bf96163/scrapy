@@ -16,7 +16,7 @@ class MiddlewareManager:
 
     def __init__(self, *middlewares):
         self.middlewares = middlewares
-        self.methods = defaultdict(deque)
+        self.methods = defaultdict(deque) #将双向que deque展开为两个???
         for mw in middlewares:
             self._add_middleware(mw)
 
@@ -24,6 +24,7 @@ class MiddlewareManager:
     def _get_mwlist_from_settings(cls, settings):
         raise NotImplementedError
 
+    #初始化manager内部所有的中间件 然后将其添加到管理列表里 最后实例化manager自己
     @classmethod
     def from_settings(cls, settings, crawler=None):
         mwlist = cls._get_mwlist_from_settings(settings)
@@ -51,7 +52,7 @@ class MiddlewareManager:
     @classmethod
     def from_crawler(cls, crawler):
         return cls.from_settings(crawler.settings, crawler)
-
+    #将 openspider 和closespider 注册到self.methods里面
     def _add_middleware(self, mw):
         if hasattr(mw, 'open_spider'):
             self.methods['open_spider'].append(mw.open_spider)

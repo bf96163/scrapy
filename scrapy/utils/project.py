@@ -58,14 +58,15 @@ def data_path(path, createdir=False):
 
 
 def get_project_settings():
+    # 在环境中检查是否有SCRAPY_SETTINGS_MODULE 这个变量，没有则载入默认
     if ENVVAR not in os.environ:
-        project = os.environ.get('SCRAPY_PROJECT', 'default')
-        init_env(project)
+        project = os.environ.get('SCRAPY_PROJECT', 'default') #os.environ.get类似于dict里取某个键的值，不过这个是从操作系统变量上搞
+        init_env(project) #修改os.path让其添加scrapy.cfg对应的路径
 
     settings = Settings()
-    settings_module_path = os.environ.get(ENVVAR)
+    settings_module_path = os.environ.get(ENVVAR) # 如果环境变量里有scrapy.cfg的路径
     if settings_module_path:
-        settings.setmodule(settings_module_path, priority='project')
+        settings.setmodule(settings_module_path, priority='project') #用setting对象载入相关module
 
     scrapy_envvars = {k[7:]: v for k, v in os.environ.items() if
                       k.startswith('SCRAPY_')}
@@ -76,7 +77,7 @@ def get_project_settings():
         'SETTINGS_MODULE',
     }
     setting_envvars = {k for k in scrapy_envvars if k not in valid_envvars}
-    if setting_envvars:
+    if setting_envvars:# 如果环境变量里 有SCRAPY_开头的其他变量，将其弄到setting里
         setting_envvar_list = ', '.join(sorted(setting_envvars))
         warnings.warn(
             'Use of environment variables prefixed with SCRAPY_ to override '

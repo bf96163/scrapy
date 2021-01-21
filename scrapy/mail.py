@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 def _to_bytes_or_none(text):
     if text is None:
         return None
-    return to_bytes(text)
+    return to_bytes(text) #就是text.encode 不过加了些判断是否已经是bytes
 
 
 class MailSender:
@@ -60,14 +60,14 @@ class MailSender:
         else:
             msg = MIMENonMultipart(*mimetype.split('/', 1))
 
-        to = list(arg_to_iter(to))
+        to = list(arg_to_iter(to)) #arg_to_iter 就是如果是None就返回None 如果是__iter__就返回本身 其他返回[传入参数]
         cc = list(arg_to_iter(cc))
 
         msg['From'] = self.mailfrom
         msg['To'] = COMMASPACE.join(to)
-        msg['Date'] = formatdate(localtime=True)
+        msg['Date'] = formatdate(localtime=True) #默认就是当前时间戳
         msg['Subject'] = subject
-        rcpts = to[:]
+        rcpts = to[:] #deepcopy
         if cc:
             rcpts.extend(cc)
             msg['Cc'] = COMMASPACE.join(cc)
@@ -94,15 +94,17 @@ class MailSender:
                          'Subject="%(mailsubject)s" Attachs=%(mailattachs)d',
                          {'mailto': to, 'mailcc': cc, 'mailsubject': subject,
                           'mailattachs': len(attachs)})
-            return
-
+            return #debug以后 就不进行真的邮件发送了
+        ## 这里的dfd是我们self._sendmail返回的deferred对象
         dfd = self._sendmail(rcpts, msg.as_string().encode(charset or 'utf-8'))
+        # deferred常用的回调添加方法
         dfd.addCallbacks(
             callback=self._sent_ok,
             errback=self._sent_failed,
             callbackArgs=[to, cc, subject, len(attachs)],
             errbackArgs=[to, cc, subject, len(attachs)],
         )
+        #添加trigger 让他这个在结束前发出
         reactor.addSystemEventTrigger('before', 'shutdown', lambda: dfd)
         return dfd
 
