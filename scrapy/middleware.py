@@ -16,7 +16,7 @@ class MiddlewareManager:
 
     def __init__(self, *middlewares):
         self.middlewares = middlewares
-        self.methods = defaultdict(deque) #将双向que deque展开为两个???
+        self.methods = defaultdict(deque) #双向que 意思是可以在左右两侧压入
         for mw in middlewares:
             self._add_middleware(mw)
 
@@ -24,18 +24,18 @@ class MiddlewareManager:
     def _get_mwlist_from_settings(cls, settings):
         raise NotImplementedError
 
-    #初始化manager内部所有的中间件 然后将其添加到管理列表里 最后实例化manager自己
+    #初始化manager内部所有的中间件 然后将其添加到管理列表里 最后实例化manager自己 相当于 __init__
     @classmethod
     def from_settings(cls, settings, crawler=None):
-        mwlist = cls._get_mwlist_from_settings(settings)
+        mwlist = cls._get_mwlist_from_settings(settings) #从setting里拿到middle ware
         middlewares = []
         enabled = []
         for clspath in mwlist:
             try:
-                mwcls = load_object(clspath)
-                mw = create_instance(mwcls, settings, crawler)
-                middlewares.append(mw)
-                enabled.append(clspath)
+                mwcls = load_object(clspath) #这里是拿到类
+                mw = create_instance(mwcls, settings, crawler) #这里是创建实例
+                middlewares.append(mw) #注册实例
+                enabled.append(clspath) #注册类
             except NotConfigured as e:
                 if e.args:
                     clsname = clspath.split('.')[-1]

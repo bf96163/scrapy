@@ -79,7 +79,7 @@ def walk_modules(path):
     returns them. If *any* module throws an exception while importing, that
     exception is thrown back.
 
-    For example: walk_modules('scrapy.utils')
+    For example: walk_modules('scrapy.utils') 返回给定路径/或者模块下的内所有的模组
     """
 
     mods = []
@@ -88,7 +88,7 @@ def walk_modules(path):
     if hasattr(mod, '__path__'):
         for _, subpath, ispkg in iter_modules(mod.__path__):
             fullpath = path + '.' + subpath
-            if ispkg:
+            if ispkg: #递归调用
                 mods += walk_modules(fullpath)
             else:
                 submod = import_module(fullpath)

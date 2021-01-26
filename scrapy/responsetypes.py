@@ -10,7 +10,7 @@ from scrapy.http import Response
 from scrapy.utils.misc import load_object
 from scrapy.utils.python import binary_is_text, to_bytes, to_unicode
 
-
+#简单的说 这个类就是当传入一个respond 时候 用各种方法推断出最适合的解析器解析 或者抛出respond
 class ResponseTypes:
 
     CLASSES = {
@@ -36,7 +36,7 @@ class ResponseTypes:
         mimedata = get_data('scrapy', 'mime.types').decode('utf8')
         self.mimetypes.readfp(StringIO(mimedata))
         for mimetype, cls in self.CLASSES.items():
-            self.classes[mimetype] = load_object(cls)
+            self.classes[mimetype] = load_object(cls) #在self.classes 里载入所有的 mime type 对应的类
 
     def from_mimetype(self, mimetype):
         """Return the most appropriate Response class for the given mimetype"""
@@ -50,7 +50,7 @@ class ResponseTypes:
 
     def from_content_type(self, content_type, content_encoding=None):
         """Return the most appropriate Response class from an HTTP Content-Type
-        header """
+        header 指定一个 content_type(mimetype) 返回对应的解析后结果 调用from_mimetype"""
         if content_encoding:
             return Response
         mimetype = to_unicode(content_type).split(';')[0].strip().lower()
@@ -67,7 +67,7 @@ class ResponseTypes:
 
     def from_headers(self, headers):
         """Return the most appropriate Response class by looking at the HTTP
-        headers"""
+        headers 从header 里面分辨"""
         cls = Response
         if b'Content-Type' in headers:
             cls = self.from_content_type(

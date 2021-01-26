@@ -24,7 +24,7 @@ def iterate_spider_output(result):
 
 def iter_spider_classes(module):
     """Return an iterator over all spider classes defined in the given module
-    that can be instantiated (i.e. which have name)
+    that can be instantiated (i.e. which have name) 检测给定module下所有类是否是Spider的子类
     """
     # this needs to be imported here until get rid of the spider manager
     # singleton in scrapy.spider.spiders

@@ -20,7 +20,7 @@ class SpiderLoader:
         self.spider_modules = settings.getlist('SPIDER_MODULES')
         self.warn_only = settings.getbool('SPIDER_LOADER_WARN_ONLY')
         self._spiders = {}
-        self._found = defaultdict(list)
+        self._found = defaultdict(list)# 设置_found为 dict 当key不在时候不发出keyerror 而给出[]空列表
         self._load_all_spiders()
 
     def _check_name_duplicates(self):
@@ -28,7 +28,7 @@ class SpiderLoader:
         for name, locations in self._found.items():
             dupes.extend([
                 f"  {cls} named {name!r} (in {mod})"
-                for mod, cls in locations
+                for mod, cls in locations #在45行代码执行多次时候，也就是说同一个类名有多个地址 触发这个
                 if len(locations) > 1
             ])
 
@@ -41,15 +41,15 @@ class SpiderLoader:
             )
 
     def _load_spiders(self, module):
-        for spcls in iter_spider_classes(module):
+        for spcls in iter_spider_classes(module):# 这个类可以判定给定模组内所有的方法里是否有spider的子类
             self._found[spcls.name].append((module.__name__, spcls.__name__))
             self._spiders[spcls.name] = spcls
 
     def _load_all_spiders(self):
         for name in self.spider_modules:
             try:
-                for module in walk_modules(name):
-                    self._load_spiders(module)
+                for module in walk_modules(name): #返回的是所有module的实例
+                    self._load_spiders(module) #从实例中判断是否是spider 并加入到_found 和_spider的控制列表中
             except ImportError:
                 if self.warn_only:
                     warnings.warn(

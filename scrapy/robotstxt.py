@@ -24,9 +24,9 @@ def decode_robotstxt(robotstxt_body, spider, to_native_str_type=False):
             extra={'spider': spider},
         )
         robotstxt_body = ''
-    return robotstxt_body
+    return robotstxt_body #根据 to_native_str_type 标志返回 unicode or utf-8 decoded text
 
-
+# 抽象方法 实现两个类 一个 from crawler  还有allowed 方法
 class RobotParser(metaclass=ABCMeta):
     @classmethod
     @abstractmethod
@@ -54,7 +54,7 @@ class RobotParser(metaclass=ABCMeta):
         """
         pass
 
-
+# 初始化时候 初始化 Robotfileparser  调用 from_craler 创建本体 调用 allowed 来判断给定UA 和 URL的组合是否复合rebots.TXT的规则
 class PythonRobotParser(RobotParser):
     def __init__(self, robotstxt_body, spider):
         from urllib.robotparser import RobotFileParser
