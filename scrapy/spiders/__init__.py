@@ -19,10 +19,10 @@ class Spider(object_ref):
     class.
     """
 
-    name: Optional[str] = None
+    name: Optional[str] = None #类型提示 类似于 name:str
     custom_settings: Optional[dict] = None
 
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, **kwargs): #主要是检查name属性 附带self.start_urls
         if name is not None:
             self.name = name
         elif not getattr(self, 'name', None):
@@ -48,22 +48,22 @@ class Spider(object_ref):
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
         spider = cls(*args, **kwargs)
-        spider._set_crawler(crawler)
+        spider._set_crawler(crawler)#注册crawler
         return spider
 
     def _set_crawler(self, crawler):
         self.crawler = crawler
         self.settings = crawler.settings
-        crawler.signals.connect(self.close, signals.spider_closed)
+        crawler.signals.connect(self.close, signals.spider_closed) #注册关闭信号到 self.close
 
-    def start_requests(self):
+    def start_requests(self): #从 self.start_urls这个列表里 构建requests并yield出去
         cls = self.__class__
         if not self.start_urls and hasattr(self, 'start_url'):
             raise AttributeError(
                 "Crawling could not start: 'start_urls' not found "
                 "or empty (but found 'start_url' attribute instead, "
-                "did you miss an 's'?)")
-        if method_is_overridden(cls, Spider, 'make_requests_from_url'):
+                "did you miss an 's'?)") #检查是不是写错了
+        if method_is_overridden(cls, Spider, 'make_requests_from_url'): #通过查询父类代码和子类代码是否一致来判断是否复写
             warnings.warn(
                 "Spider.make_requests_from_url method is deprecated; it "
                 "won't be called in future Scrapy releases. Please "
@@ -94,7 +94,7 @@ class Spider(object_ref):
 
     @classmethod
     def update_settings(cls, settings):
-        settings.setdict(cls.custom_settings or {}, priority='spider')
+        settings.setdict(cls.custom_settings or {}, priority='spider') #这里就是 custom_settings 覆盖原来setting的地方
 
     @classmethod
     def handles_request(cls, request):

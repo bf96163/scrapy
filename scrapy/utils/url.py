@@ -17,7 +17,7 @@ from scrapy.utils.python import to_unicode
 
 
 def url_is_from_any_domain(url, domains):
-    """Return True if the url belongs to any of the given domains"""
+    """Return True if the url belongs to any of the given domains 用parse_url(url).netloc.lower() 来解析出host"""
     host = parse_url(url).netloc.lower()
     if not host:
         return False
