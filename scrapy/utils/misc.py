@@ -85,13 +85,14 @@ def walk_modules(path):
     mods = []
     mod = import_module(path)
     mods.append(mod)
-    if hasattr(mod, '__path__'):
-        for _, subpath, ispkg in iter_modules(mod.__path__):
+    if hasattr(mod, '__path__'):# __path__是当前包的路径文件
+        #pkgutil.iter_modules 是当给定一个string类型的 绝对地址 然后将改地址下所有的子模块返回 参数是一个FileFinder对象，第二个是模块名字 第三个是是否是pakge的标志
+        for _, subpath, ispkg in iter_modules(mod.__path__): #仅包本身有__path__属性 其他函数没有
             fullpath = path + '.' + subpath
             if ispkg: #递归调用
                 mods += walk_modules(fullpath)
             else:
-                submod = import_module(fullpath)
+                submod = import_module(fullpath)#动态加载模块 相当于import
                 mods.append(submod)
     return mods
 

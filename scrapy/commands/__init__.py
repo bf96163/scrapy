@@ -11,8 +11,8 @@ from scrapy.exceptions import UsageError
 
 class ScrapyCommand:
 
-    requires_project = False
-    crawler_process = None
+    requires_project = False # 是否需要在环境内使用
+    crawler_process = None #这个变量是由 cmdline.py 赋予的 cmd.crawler_process = CrawlerProcess(settings)
 
     # default settings to be used for this command instead of global defaults
     default_settings = {}

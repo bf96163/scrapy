@@ -35,9 +35,9 @@ from scrapy.utils.reactor import install_reactor, verify_installed_reactor
 # scrapy 中文解释及其注释
 logger = logging.getLogger(__name__)
 
-#实际爬取执行的地方
+#实际爬取执行的地方 crawler 是由一个spider 类 和一个setting对象 拼接而成的 相当于一个异步里的一个 task
 class Crawler:
-
+    #参数检查 loghandler 和 setting的配置
     def __init__(self, spidercls, settings=None):
         if isinstance(spidercls, Spider):
             #要求传入的是类而不是实例
@@ -52,8 +52,8 @@ class Crawler:
         #然后使用spidercls类的update_setting方式来更新设置
         self.spidercls.update_settings(self.settings)
 
-        self.signals = SignalManager(self)
-        #从类的setting中的STATS_CLASS拿到stats
+        self.signals = SignalManager(self) #这里定义的是signal的sender 接受者可以比较好的接到这个对象
+        #从类的setting中的定义的 统计类? STATS_CLASS 初始化传递自己
         self.stats = load_object(self.settings['STATS_CLASS'])(self)
         #从setting中拿到loglevel 将初始化的LogCounterHandler 加入到logging.root
         handler = LogCounterHandler(self, level=self.settings.get('LOG_LEVEL'))
@@ -96,8 +96,8 @@ class Crawler:
             self.engine = self._create_engine()
             #从self.spider.start_requests()中拿到requests
             start_requests = iter(self.spider.start_requests())
-            #调用异步方法，开始爬虫爬取工作
-            yield self.engine.open_spider(self.spider, start_requests)
+            # 调用 openspider 生成start_request deferred
+            yield self.engine.open_spider(self.spider, start_requests) #实际入口
             #调用核心的start方法，并将返回值包装成deferred对象
             yield defer.maybeDeferred(self.engine.start)
         except Exception:

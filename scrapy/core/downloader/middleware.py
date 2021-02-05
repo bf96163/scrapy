@@ -33,7 +33,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
         @defer.inlineCallbacks
         def process_request(request):
             for method in self.methods['process_request']:
-                response = yield deferred_from_coro(method(request=request, spider=spider))
+                response = yield deferred_from_coro(method(request=request, spider=spider)) # 这个deferred_from_coro方法是将 middleware的方法 从 asyncio 转化为 recator方法 并yield出去
                 if response is not None and not isinstance(response, (Response, Request)):
                     raise _InvalidOutput(
                         f"Middleware {method.__self__.__class__.__name__}"
@@ -78,7 +78,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
                     return response
             return failure
 
-        deferred = mustbe_deferred(process_request, request)
+        deferred = mustbe_deferred(process_request, request) #类似于maybedeffered 但是不在这轮次里 运行callback 和 errback
         deferred.addErrback(process_exception)
         deferred.addCallback(process_response)
         return deferred

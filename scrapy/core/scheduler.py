@@ -47,7 +47,7 @@ class Scheduler:
         self.crawler = crawler
 
     @classmethod
-    def from_crawler(cls, crawler):
+    def from_crawler(cls, crawler): #crawler 来实例化这个东西
         settings = crawler.settings
         dupefilter_cls = load_object(settings['DUPEFILTER_CLASS'])
         dupefilter = create_instance(dupefilter_cls, settings, crawler)
@@ -61,7 +61,7 @@ class Scheduler:
 
     def has_pending_requests(self):
         return len(self) > 0
-
+    # 初始化 各个que  然后调用 dupfilter 的.open()
     def open(self, spider):
         self.spider = spider
         self.mqs = self._mq()
@@ -69,41 +69,41 @@ class Scheduler:
         return self.df.open()
 
     def close(self, reason):
-        if self.dqs:
-            state = self.dqs.close()
-            self._write_dqs_state(self.dqdir, state)
+        if self.dqs: # 如果有disk que 那么
+            state = self.dqs.close() #拿到disk que 的对应state
+            self._write_dqs_state(self.dqdir, state) #写入硬盘
         return self.df.close(reason)
-
+    #将ruquest 压入队列
     def enqueue_request(self, request):
-        if not request.dont_filter and self.df.request_seen(request):
+        if not request.dont_filter and self.df.request_seen(request): #dont_filter =False 且 filter见过这个request
             self.df.log(request, self.spider)
-            return False
-        dqok = self._dqpush(request)
+            return False #舍弃
+        dqok = self._dqpush(request) #先尝试压入 diskque
         if dqok:
             self.stats.inc_value('scheduler/enqueued/disk', spider=self.spider)
         else:
-            self._mqpush(request)
+            self._mqpush(request) #再尝试压入memory que
             self.stats.inc_value('scheduler/enqueued/memory', spider=self.spider)
         self.stats.inc_value('scheduler/enqueued', spider=self.spider)
         return True
 
     def next_request(self):
-        request = self.mqs.pop()
+        request = self.mqs.pop() #先从memory 中拿
         if request:
             self.stats.inc_value('scheduler/dequeued/memory', spider=self.spider)
         else:
-            request = self._dqpop()
+            request = self._dqpop() #没有的话就从 disk que中拿
             if request:
                 self.stats.inc_value('scheduler/dequeued/disk', spider=self.spider)
         if request:
             self.stats.inc_value('scheduler/dequeued', spider=self.spider)
         return request
-
+    #返回 memoryque 和disk que的数量总和
     def __len__(self):
         return len(self.dqs) + len(self.mqs) if self.dqs else len(self.mqs)
-
+    #disk push
     def _dqpush(self, request):
-        if self.dqs is None:
+        if self.dqs is None: # 设置上不用 diskque 的话 就跳出
             return
         try:
             self.dqs.push(request)
@@ -120,14 +120,14 @@ class Scheduler:
             return
         else:
             return True
-
+    # memory que push
     def _mqpush(self, request):
         self.mqs.push(request)
-
+    # 从diskque 中pop一个出来
     def _dqpop(self):
         if self.dqs:
             return self.dqs.pop()
-
+    #建立 memory 的QUE
     def _mq(self):
         """ Create a new priority queue instance, with in-memory storage """
         return create_instance(self.pqclass,
@@ -136,6 +136,7 @@ class Scheduler:
                                downstream_queue_cls=self.mqclass,
                                key='')
 
+    # 建立 disk 的QUE 如果有这个文件就读入
     def _dq(self):
         """ Create a new priority queue instance, with disk storage """
         state = self._read_dqs_state(self.dqdir)
@@ -143,13 +144,13 @@ class Scheduler:
                             settings=None,
                             crawler=self.crawler,
                             downstream_queue_cls=self.dqclass,
-                            key=self.dqdir,
-                            startprios=state)
+                            key=self.dqdir, #文件目录
+                            startprios=state) #存储的state
         if q:
             logger.info("Resuming crawl (%(queuesize)d requests scheduled)",
                         {'queuesize': len(q)}, extra={'spider': self.spider})
         return q
-
+    # 建立目录/requests.queue
     def _dqdir(self, jobdir):
         """ Return a folder name to keep disk queue state at """
         if jobdir:
@@ -157,14 +158,14 @@ class Scheduler:
             if not exists(dqdir):
                 os.makedirs(dqdir)
             return dqdir
-
+    # 从对应文件读入 json
     def _read_dqs_state(self, dqdir):
         path = join(dqdir, 'active.json')
         if not exists(path):
             return ()
         with open(path) as f:
             return json.load(f)
-
+    #将对应的dict 写入json文件
     def _write_dqs_state(self, dqdir, state):
         with open(join(dqdir, 'active.json'), 'w') as f:
             json.dump(state, f)

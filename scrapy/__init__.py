@@ -18,7 +18,7 @@ from scrapy.item import Item, Field
 __all__ = [
     '__version__', 'version_info', 'twisted_version', 'Spider',
     'Request', 'FormRequest', 'Selector', 'Item', 'Field',
-]
+] #限制对外暴露窗口为 上述几个
 
 
 # Scrapy and Twisted versions
