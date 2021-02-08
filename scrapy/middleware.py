@@ -27,7 +27,7 @@ class MiddlewareManager:
     #初始化manager内部所有的中间件 然后将其添加到管理列表里 最后实例化manager自己 相当于 __init__
     @classmethod
     def from_settings(cls, settings, crawler=None):
-        mwlist = cls._get_mwlist_from_settings(settings) #从setting里拿到middle ware
+        mwlist = cls._get_mwlist_from_settings(settings) #调用子类的_get_mwlist_from_settings 获取对应的middlewarelist
         middlewares = []
         enabled = []
         for clspath in mwlist:
@@ -52,7 +52,7 @@ class MiddlewareManager:
     @classmethod
     def from_crawler(cls, crawler):
         return cls.from_settings(crawler.settings, crawler)
-    #将 openspider 和closespider 注册到self.methods里面
+    #将 middleware中的openspider 和closespider 注册到self.methods里面
     def _add_middleware(self, mw):
         if hasattr(mw, 'open_spider'):
             self.methods['open_spider'].append(mw.open_spider)
@@ -63,14 +63,14 @@ class MiddlewareManager:
         return process_parallel(self.methods[methodname], obj, *args)
 
     def _process_chain(self, methodname, obj, *args):
-        return process_chain(self.methods[methodname], obj, *args)
+        return process_chain(self.methods[methodname], obj, *args) # 这里的process_chain 实际上就是将self.methods里所有的callback添加到 一个deferred对象上 然后返回这个对象 参数是这个obj 和*args
 
     def _process_chain_both(self, cb_methodname, eb_methodname, obj, *args):
         return process_chain_both(self.methods[cb_methodname],
                                   self.methods[eb_methodname], obj, *args)
 
     def open_spider(self, spider):
-        return self._process_parallel('open_spider', spider)
+        return self._process_parallel('open_spider', spider) #并发调用所有 中间中 的open_spider 方法
 
     def close_spider(self, spider):
         return self._process_parallel('close_spider', spider)

@@ -29,7 +29,7 @@ class DownloaderMiddlewareManager(MiddlewareManager):
         if hasattr(mw, 'process_exception'):
             self.methods['process_exception'].appendleft(mw.process_exception)
 
-    def download(self, download_func, request, spider):
+    def download(self, download_func, request, spider): # 这里的 download_func 实际就是downloader的_enqueue_request
         @defer.inlineCallbacks
         def process_request(request):
             for method in self.methods['process_request']:

@@ -25,10 +25,10 @@ def _fname(f):
 class SpiderMiddlewareManager(MiddlewareManager):
 
     component_name = 'spider middleware'
-
+    # 会被父类的 fromsetting来调用
     @classmethod
     def _get_mwlist_from_settings(cls, settings):
-        return build_component_list(settings.getwithbase('SPIDER_MIDDLEWARES'))
+        return build_component_list(settings.getwithbase('SPIDER_MIDDLEWARES')) #这里有实例化并排序的功能
 
     def _add_middleware(self, mw):
         super()._add_middleware(mw)
@@ -41,13 +41,13 @@ class SpiderMiddlewareManager(MiddlewareManager):
         process_spider_exception = getattr(mw, 'process_spider_exception', None)
         self.methods['process_spider_exception'].appendleft(process_spider_exception)
 
-    def scrape_response(self, scrape_func, response, request, spider):
+    def scrape_response(self, scrape_func, response, request, spider): # 这里的scrape_func 是call_spider 这个函数
 
         def process_spider_input(response):
-            for method in self.methods['process_spider_input']:
+            for method in self.methods['process_spider_input']: #调用所有中间件 处理response
                 try:
                     result = method(response=response, spider=spider)
-                    if result is not None:
+                    if result is not None: # 中间件的process_spider_input 方法需要返回None
                         msg = (f"Middleware {_fname(method)} must return None "
                                f"or raise an exception, got {type(result)}")
                         raise _InvalidOutput(msg)

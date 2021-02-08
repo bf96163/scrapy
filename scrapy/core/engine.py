@@ -272,7 +272,7 @@ class ExecutionEngine:
         logger.info("Spider opened", extra={'spider': spider})
         nextcall = CallLaterOnce(self._next_request, spider) # 这里相当于 创建了一个 CallLaterOnce的对象 目标是从start_request里开始抛出request  不过 他是相当于仅仅生成个deferred
         scheduler = self.scheduler_cls.from_crawler(self.crawler)# 实例化scheduler
-        start_requests = yield self.scraper.spidermw.process_start_requests(start_requests, spider) # 将request 添加各种callback 和errback
+        start_requests = yield self.scraper.spidermw.process_start_requests(start_requests, spider) # 调用middleware中的process_start_requests 来处理这些startrequest
         slot = Slot(start_requests, close_if_idle, nextcall, scheduler) #这里创建对应的slot
         self.slot = slot
         self.spider = spider

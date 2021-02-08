@@ -23,4 +23,4 @@ class ItemPipelineManager(MiddlewareManager):
             self.methods['process_item'].append(deferred_f_from_coro_f(pipe.process_item))
 
     def process_item(self, item, spider):
-        return self._process_chain('process_item', item, spider)
+        return self._process_chain('process_item', item, spider) #这里就是 调用所有middleware中的process_item 传入item spider

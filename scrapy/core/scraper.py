@@ -192,8 +192,8 @@ class Scraper:
         if isinstance(output, Request):
             self.crawler.engine.crawl(request=output, spider=spider) #丢给 engine 处理
         elif is_item(output):
-            self.slot.itemproc_size += 1 # slot计数器+1
-            dfd = self.itemproc.process_item(output, spider) #用处理item的类 output
+            self.slot.itemproc_size += 1 # slot 正在处理 item计数器+1
+            dfd = self.itemproc.process_item(output, spider) #用处理ItemPipelineManager的类 output（item）
             dfd.addBoth(self._itemproc_finished, output, response, spider) # item回调链 添加self._itemproc_finished
             return dfd
         elif output is None:
